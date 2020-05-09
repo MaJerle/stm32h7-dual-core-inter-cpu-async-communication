@@ -19,12 +19,27 @@ volatile ringbuff_t* rb_cm7_to_cm4;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART3_UART_Init(void);
+static void led_init(void);
 
 /**
  * \brief           The application entry point
  */
 int
 main(void) {
+    uint32_t time, t1;
+
+    /*
+     * To be independant on CM4 boot option bytes config,
+     * application will force second core to start by setting its relevant bit to RCC register.
+     *
+     * Application for second core will immediately enter to STOP mode.
+     *
+     * 1. Start second core
+     * 2. Wait for CPU2 to enter low-power mode
+     */
+    HAL_RCCEx_EnableBootCore(RCC_BOOT_C2);
+    WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET, 0xFFFF);
+
     /* MCU Configuration--------------------------------------------------------*/
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -37,6 +52,9 @@ main(void) {
     MX_GPIO_Init();
     MX_USART3_UART_Init();
 
+    /* Init blue LED */
+    led_init();
+
     /* Reset memory */
     memset((void *)SHD_RAM_START_ADDR, 0x00, SHD_RAM_LEN);
 
@@ -46,19 +64,21 @@ main(void) {
     ringbuff_init(rb_cm7_to_cm4, (void *)BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
     ringbuff_init(rb_cm4_to_cm7, (void *)BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
 
-    /* Enable hardware semaphore */
+    /* Enable clock for HSEM */
     __HAL_RCC_HSEM_CLK_ENABLE();
-    HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_CM4_TO_CM7));
-
-    /* Start second core */
-    HAL_RCCEx_EnableBootCore(RCC_BOOT_C2);
+    HSEM_TAKE_RELEASE(HSEM_WAKEUP_CPU2);
+    WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET, 0xFFFF);
 
     /* Send test message */
     HAL_UART_Transmit(&huart3, (void *)"[CM7] Core ready\r\n", 18, 100);
 
+    /* Set default time */
+    time = t1 = HAL_GetTick();
     while (1) {
         size_t len;
         void* addr;
+
+        time = HAL_GetTick();
 
         /* Check if CM4 has written some data to CM7 core */
         len = ringbuff_get_linear_block_read_length(rb_cm4_to_cm7);
@@ -71,7 +91,29 @@ main(void) {
             /* Mark buffer as read */
             ringbuff_skip(rb_cm4_to_cm7, len);
         }
+
+        /* Toggle LED */
+        if (time - t1 >= 500) {
+            t1 = time;
+            HAL_GPIO_TogglePin(LD1_GPIO_PORT, LD1_GPIO_PIN);
+        }
     }
+}
+
+/**
+ * \brief           Initialize LEDs controlled by core
+ */
+void
+led_init(void) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    LD1_GPIO_CLK_EN();
+
+    GPIO_InitStruct.Pin = LD1_GPIO_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(LD1_GPIO_PORT, &GPIO_InitStruct);
 }
 
 /**
@@ -165,5 +207,5 @@ MX_GPIO_Init(void) {
  */
 void
 Error_Handler(void) {
-
+    while (1) {}
 }
