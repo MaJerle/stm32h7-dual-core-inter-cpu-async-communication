@@ -30,15 +30,16 @@ main(void) {
 
     /*
      * To be independant on CM4 boot option bytes config,
-     * application will force second core to start by setting its relevant bit to RCC register.
+     * application will force second core to start by setting its relevant bit in RCC registers.
      *
      * Application for second core will immediately enter to STOP mode.
+     * This is done in CPU2 main.c file
      *
-     * 1. Start second core
+     * 1. Start CPU2 core
      * 2. Wait for CPU2 to enter low-power mode
      */
     HAL_RCCEx_EnableBootCore(RCC_BOOT_C2);
-    WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET, 0xFFFF);
+    WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET, 0xFFFFFF);
 
     /* MCU Configuration--------------------------------------------------------*/
 
@@ -48,12 +49,10 @@ main(void) {
     /* Configure the system clock */
     SystemClock_Config();
 
-    /* Initialize all configured peripherals */
-    MX_GPIO_Init();
-    MX_USART3_UART_Init();
-
-    /* Init blue LED */
-    led_init();
+    /*
+     * Initialize things that are important to be ready before
+     * CPU2 starts using it
+     */
 
     /* Reset memory */
     memset((void *)SHD_RAM_START_ADDR, 0x00, SHD_RAM_LEN);
@@ -68,6 +67,21 @@ main(void) {
     __HAL_RCC_HSEM_CLK_ENABLE();
     HSEM_TAKE_RELEASE(HSEM_WAKEUP_CPU2);
     WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET, 0xFFFF);
+
+    /*
+     * Initialize other things, not being important for second core
+     *
+     * It is important to wakeup D2 domain before accessing any
+     * peripherals that are linked there, otherwise clock is disabled
+     * any attempt will result to undefined write/read
+     */
+
+    /* Init blue LED */
+    led_init();
+
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_USART3_UART_Init();
 
     /* Send test message */
     HAL_UART_Transmit(&huart3, (void *)"[CM7] Core ready\r\n", 18, 100);

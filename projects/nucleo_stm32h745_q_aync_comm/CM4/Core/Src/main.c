@@ -41,12 +41,14 @@ main(void) {
     rb_cm4_to_cm7 = (void *)BUFF_CM4_TO_CM7_ADDR;
     rb_cm7_to_cm4 = (void *)BUFF_CM7_TO_CM4_ADDR;
 
+    /* Write message to buffer */
+    ringbuff_write(rb_cm4_to_cm7, "[CM4] Core ready\r\n", 18);
+
     /* Set default time */
     time = t1 = t2 = HAL_GetTick();
     while (1) {
         time = HAL_GetTick();
 
-#if 0
         /* Send data to CM7 */
         if (time - t1 >= 1000) {
             t1 = time;
@@ -57,7 +59,6 @@ main(void) {
             ringbuff_write(rb_cm4_to_cm7, &c, 1);
             ringbuff_write(rb_cm4_to_cm7, "\r\n", 2);
         }
-#endif
 
         /* Toggle LED */
         if (time - t2 >= 500) {
