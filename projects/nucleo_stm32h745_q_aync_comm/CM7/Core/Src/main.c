@@ -50,8 +50,8 @@ main(void) {
     SystemClock_Config();
 
     /*
-     * Initialize things that are important to be ready before
-     * CPU2 starts using it
+     * Initialize things that are important
+     * to be ready before CPU2 wakes-up.
      */
 
     /* Reset memory */
@@ -71,7 +71,7 @@ main(void) {
      *
      * It is important to wakeup D2 domain before accessing any
      * peripherals that are linked there, otherwise clock is disabled
-     * any attempt will result to undefined write/read
+     * and any attempt will result to undefined write/read
      */
 
     /* Init blue LED */
