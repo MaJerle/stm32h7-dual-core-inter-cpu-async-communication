@@ -9,8 +9,8 @@
 #include "common.h"
 
 /* Ringbuffer variables */
-volatile ringbuff_t* rb_cm4_to_cm7;
-volatile ringbuff_t* rb_cm7_to_cm4;
+volatile ringbuff_t* rb_cm4_to_cm7 = (void *)BUFF_CM4_TO_CM7_ADDR;
+volatile ringbuff_t* rb_cm7_to_cm4 = (void *)BUFF_CM7_TO_CM4_ADDR;
 static void led_init(void);
 
 /**
@@ -36,10 +36,6 @@ main(void) {
 
     /* Init blue LED */
     led_init();
-
-    /* Assign pointers, no initialization at this stage */
-    rb_cm4_to_cm7 = (void *)BUFF_CM4_TO_CM7_ADDR;
-    rb_cm7_to_cm4 = (void *)BUFF_CM7_TO_CM4_ADDR;
 
     /* Write message to buffer */
     ringbuff_write(rb_cm4_to_cm7, "[CM4] Core ready\r\n", 18);

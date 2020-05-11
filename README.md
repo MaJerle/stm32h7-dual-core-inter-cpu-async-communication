@@ -22,10 +22,13 @@ Example is configured for this configuration:
 
 * CPU1 (Cortex-M7) flash memory address is `0x08000000` and its size is `1MB`
 * CPU2 (Cortex-M4) flash memory address is `0x08100000` and its size is `1MB`
-* CPU2 is by default disabled and is active with software instruction executed by CPU1
+* CPU1 boot option must be enabled to ensure Cortex-M7 starts after reset
+* CPU2 boot can be enabled or disabled. CPU1 always starts CPU2 by software, regardless of CPU2 boot configuration
+
+![Option bytes snippet](docs/option_bytes.png)
 
 > Option bytes can be configured using [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html) software
 
 ## Run examples
 
-Run examples with [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) toolchain.
+Run examples with [STM32CubeIDE v1.3.0](https://www.st.com/en/development-tools/stm32cubeide.html) or later toolchain.

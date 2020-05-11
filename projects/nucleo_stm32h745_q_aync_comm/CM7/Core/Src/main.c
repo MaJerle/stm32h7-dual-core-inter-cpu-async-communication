@@ -12,8 +12,8 @@
 UART_HandleTypeDef huart3;
 
 /* Ringbuffer variables */
-volatile ringbuff_t* rb_cm4_to_cm7;
-volatile ringbuff_t* rb_cm7_to_cm4;
+volatile ringbuff_t* rb_cm4_to_cm7 = (void *)BUFF_CM4_TO_CM7_ADDR;
+volatile ringbuff_t* rb_cm7_to_cm4 = (void *)BUFF_CM7_TO_CM4_ADDR;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -29,7 +29,7 @@ main(void) {
     uint32_t time, t1;
 
     /*
-     * To be independant on CM4 boot option bytes config,
+     * To be independent on CM4 boot option bytes config,
      * application will force second core to start by setting its relevant bit in RCC registers.
      *
      * Application for second core will immediately enter to STOP mode.
@@ -39,7 +39,7 @@ main(void) {
      * 2. Wait for CPU2 to enter low-power mode
      */
     HAL_RCCEx_EnableBootCore(RCC_BOOT_C2);
-    WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET, 0xFFFFFF);
+    WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET, 0xFFFF);
 
     /* MCU Configuration--------------------------------------------------------*/
 
@@ -58,8 +58,6 @@ main(void) {
     memset((void *)SHD_RAM_START_ADDR, 0x00, SHD_RAM_LEN);
 
     /* Assign pointers and initialize */
-    rb_cm4_to_cm7 = (void *)BUFF_CM4_TO_CM7_ADDR;
-    rb_cm7_to_cm4 = (void *)BUFF_CM7_TO_CM4_ADDR;
     ringbuff_init(rb_cm7_to_cm4, (void *)BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
     ringbuff_init(rb_cm4_to_cm7, (void *)BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
 
