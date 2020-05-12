@@ -49,22 +49,14 @@ main(void) {
     /* Configure the system clock */
     SystemClock_Config();
 
-    /*
-     * Initialize things that are important
-     * to be ready before CPU2 wakes-up.
-     */
-
-    /* Reset memory */
-    memset((void *)SHD_RAM_START_ADDR, 0x00, SHD_RAM_LEN);
-
-    /* Assign pointers and initialize */
-    ringbuff_init(rb_cm7_to_cm4, (void *)BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
-    ringbuff_init(rb_cm4_to_cm7, (void *)BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
-
-    /* Enable clock for HSEM */
+    /* Wakeup CPU2 */
     __HAL_RCC_HSEM_CLK_ENABLE();
     HSEM_TAKE_RELEASE(HSEM_WAKEUP_CPU2);
     WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET, 0xFFFF);
+
+    /* Initialize buffers */
+    ringbuff_init(rb_cm7_to_cm4, (void *)BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
+    ringbuff_init(rb_cm4_to_cm7, (void *)BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
 
     /*
      * Initialize other things, not being important for second core

@@ -29,14 +29,19 @@
  * This file is part of ring buffer library.
  *
  * Author:          Tilen MAJERLE <tilen@majerle.eu>
- * Version:         v1.3.0
+ * Version:         v1.3.1
  */
 #include "ringbuff/ringbuff.h"
 
 /* Memory set and copy functions */
 #define BUF_MEMSET                      memset
 #define BUF_MEMCPY                      memcpy
+
+#if RINGBUFF_USE_MAGIC
+#define BUF_IS_VALID(b)                 ((b) != NULL && (b)->magic1 == 0xDEADBEEF && (b)->magic2 == ~0xDEADBEEF && (b)->buff != NULL && (b)->size > 0)
+#else
 #define BUF_IS_VALID(b)                 ((b) != NULL && (b)->buff != NULL && (b)->size > 0)
+#endif /* RINGBUFF_USE_MAGIC */
 #define BUF_MIN(x, y)                   ((x) < (y) ? (x) : (y))
 #define BUF_MAX(x, y)                   ((x) > (y) ? (x) : (y))
 #define BUF_SEND_EVT(b, type, bp)       do { if ((b)->evt_fn != NULL) { (b)->evt_fn((b), (type), (bp)); } } while (0)
@@ -60,7 +65,22 @@ ringbuff_init(RINGBUFF_VOLATILE ringbuff_t* buff, void* buffdata, size_t size) {
     buff->size = size;
     buff->buff = buffdata;
 
+#if RINGBUFF_USE_MAGIC
+    buff->magic1 = 0xDEADBEEF;
+    buff->magic2 = ~0xDEADBEEF;
+#endif /* RINGBUFF_USE_MAGIC */
+
     return 1;
+}
+
+/**
+ * \brief           Check if ringbuff is initialized and ready to use
+ * \param[in]       buff: Buffer handle
+ * \return          `1` if ready, `0` otherwise
+ */
+uint8_t
+ringbuff_is_ready(RINGBUFF_VOLATILE ringbuff_t* buff) {
+    return BUF_IS_VALID(buff);
 }
 
 /**

@@ -37,6 +37,9 @@ main(void) {
     /* Init blue LED */
     led_init();
 
+    /* Wait for buffers to be ready by CM7 */
+    while (!ringbuff_is_ready(rb_cm4_to_cm7) || !ringbuff_is_ready(rb_cm7_to_cm4)) {}
+
     /* Write message to buffer */
     ringbuff_write(rb_cm4_to_cm7, "[CM4] Core ready\r\n", 18);
 
