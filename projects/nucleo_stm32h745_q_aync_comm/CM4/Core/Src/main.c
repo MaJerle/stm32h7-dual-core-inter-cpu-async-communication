@@ -34,10 +34,14 @@ main(void) {
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
 
-    /* Init blue LED */
+    /* Init LED3 */
     led_init();
 
-    /* Wait for buffers to be ready by CM7 */
+    /*
+     * Wait for buffers to be ready by CM7
+     *
+     * This should not wait and should go straight through
+     */
     while (!ringbuff_is_ready(rb_cm4_to_cm7) || !ringbuff_is_ready(rb_cm7_to_cm4)) {}
 
     /* Write message to buffer */
