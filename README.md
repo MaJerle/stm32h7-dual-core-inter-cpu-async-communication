@@ -8,6 +8,12 @@ This example demonstrates how to implement communication between both cores to e
 It uses shared RAM and `2` separate ring buffers, acting like pipe (single input, single output)
 in both direction. First buffer from CPU1 to CPU2, second buffer from CPU2 to CPU1.
 
+SRAM4 is used as shared RAM in D3 domain. This RAM is preferred and suggested to be used for shared RAM
+in dual-core STM32H7xx series for inter-CPU communication. It is outside both domains of both CPU cores,
+not affecting to low-power features of each domain.
+
+![Bus matrix](docs/bus_matrix.png)
+
 ## Used hardware
 
 Example runs on official ST Nucleo boards for dual-core STM32H7 series, listed below.
