@@ -37,9 +37,9 @@
 /* Align X to 4 bytes */
 #define MEM_ALIGN(x)                        (((x) + 0x00000003) & ~0x00000003)
 
-/* Shared RAM between 2 cores is SRAM3 */
-#define SHD_RAM_START_ADDR                  0x30040000
-#define SHD_RAM_LEN                         0x00008000
+/* Shared RAM between 2 cores is SRAM4 in D3 domain */
+#define SHD_RAM_START_ADDR                  0x38000000
+#define SHD_RAM_LEN                         0x0000FFFF
 
 /* Buffer from CM4 to CM7 */
 #define BUFF_CM4_TO_CM7_ADDR                MEM_ALIGN(SHD_RAM_START_ADDR)

@@ -49,14 +49,14 @@ main(void) {
     /* Configure the system clock */
     SystemClock_Config();
 
+    /* Initialize buffers that are used as shared memory */
+    ringbuff_init(rb_cm7_to_cm4, (void *)BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
+    ringbuff_init(rb_cm4_to_cm7, (void *)BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
+
     /* Wakeup CPU2 */
     __HAL_RCC_HSEM_CLK_ENABLE();
     HSEM_TAKE_RELEASE(HSEM_WAKEUP_CPU2);
     WAIT_COND_WITH_TIMEOUT(__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) == RESET, 0xFFFF);
-
-    /* Initialize buffers */
-    ringbuff_init(rb_cm7_to_cm4, (void *)BUFFDATA_CM7_TO_CM4_ADDR, BUFFDATA_CM7_TO_CM4_LEN);
-    ringbuff_init(rb_cm4_to_cm7, (void *)BUFFDATA_CM4_TO_CM7_ADDR, BUFFDATA_CM4_TO_CM7_LEN);
 
     /*
      * Initialize other things, not being important for second core
@@ -66,7 +66,7 @@ main(void) {
      * and any attempt will result to undefined write/read
      */
 
-    /* Init blue LED */
+    /* Init LED1 */
     led_init();
 
     /* Initialize all configured peripherals */
