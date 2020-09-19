@@ -84,9 +84,8 @@ main(void) {
 
         time = HAL_GetTick();
 
-        /* Check if CM4 has written some data to CM7 core */
-        len = ringbuff_get_linear_block_read_length(rb_cm4_to_cm7);
-        if (len > 0) {
+        /* Check if CPU2 sent some data to CPU1 core */
+        while ((len = ringbuff_get_linear_block_read_length(rb_cm4_to_cm7)) > 0) {
             addr = ringbuff_get_linear_block_read_address(rb_cm4_to_cm7);
 
             /* Transmit data */
@@ -101,6 +100,13 @@ main(void) {
             t1 = time;
             HAL_GPIO_TogglePin(LD1_GPIO_PORT, LD1_GPIO_PIN);
         }
+
+        /*
+         * If CPU1 wants to send data to CPU2,
+         * it uses second buffer pipe, rb_cm7_to_cm4
+         * is written by CPU1 and read by CPU2.
+         */
+        //ringbuff_write(rb_cm7_to_cm4, "my_data", 7);
     }
 }
 

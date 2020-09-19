@@ -38,7 +38,7 @@ main(void) {
     led_init();
 
     /*
-     * Wait for buffers to be ready by CM7
+     * Wait for buffers to be ready by CPU1
      *
      * This should not wait and should go straight through
      */
@@ -50,14 +50,17 @@ main(void) {
     /* Set default time */
     time = t1 = t2 = HAL_GetTick();
     while (1) {
+        size_t len;
+        void* addr;
+
         time = HAL_GetTick();
 
-        /* Send data to CM7 */
+        /* Send data to CPU1 */
         if (time - t1 >= 1000) {
             t1 = time;
             char c = '0' + (++i % 10);
 
-            /* Write to buffer for Cortex-M4 */
+            /* Write to buffer from CPU2 to CPU1 */
             ringbuff_write(rb_cm4_to_cm7, "[CM4] Number: ", 14);
             ringbuff_write(rb_cm4_to_cm7, &c, 1);
             ringbuff_write(rb_cm4_to_cm7, "\r\n", 2);
@@ -67,6 +70,22 @@ main(void) {
         if (time - t2 >= 500) {
             t2 = time;
             HAL_GPIO_TogglePin(LD3_GPIO_PORT, LD3_GPIO_PIN);
+        }
+
+        /* Check if CPU1 sent some data to CPU2 core */
+        while ((len = ringbuff_get_linear_block_read_length(rb_cm7_to_cm4)) > 0) {
+            addr = ringbuff_get_linear_block_read_address(rb_cm7_to_cm4);
+
+            /*
+             * `addr` holds pointer to beginning of data array
+             * which can be used directly in linear form.
+             *
+             * Its length is `len` bytes
+             */
+            /* Process data here */
+
+            /* Mark buffer as read to allow other writes from CPU1 */
+            ringbuff_skip(rb_cm7_to_cm4, len);
         }
     }
 }
